@@ -1,5 +1,5 @@
 window.allPostingsData = {
-  "generated_at": "2026-04-13T17:48:04.818683",
+  "generated_at": "2026-04-13T17:50:31.446338",
   "start_date": "2026-04-05",
   "count": 686,
   "postings": [

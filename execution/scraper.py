@@ -737,15 +737,16 @@ class NaverCafeScraper(BaseScraper):
             # 각 상세 페이지 파싱
             for title, href in links:
                 detail = self._parse_cafe_detail(driver, href)
-                # 데스크톱 URL로 변환 (모바일 URL은 로그인 요구, ArticleRead.nhn은 데스크톱에서 빈 창 표시)
+                # 외부 링크(이메일, 타 웹사이트)에서 접속 시 네이버 카페 PC버전(iframe)은 종종 로그인 화면으로 튕기거나 막는 현상이 있습니다.
+                # m.cafe.naver.com (모바일 웹버전)으로 연결하면 공개 카페의 경우 로그인 없이 정상적으로 내용이 보입니다.
                 article_m = re.search(r'articleid=(\d+)', href)
                 path_m = re.search(r'/togetheralba/(\d+)', href)
                 if article_m:
-                    desktop_url = f"https://cafe.naver.com/togetheralba/{article_m.group(1)}"
+                    desktop_url = f"https://m.cafe.naver.com/togetheralba/{article_m.group(1)}"
                 elif path_m:
-                    desktop_url = f"https://cafe.naver.com/togetheralba/{path_m.group(1)}"
+                    desktop_url = f"https://m.cafe.naver.com/togetheralba/{path_m.group(1)}"
                 else:
-                    desktop_url = href.replace("m.cafe.naver.com", "cafe.naver.com")
+                    desktop_url = href
                 
                 posting = self.make_posting(
                     title=title,

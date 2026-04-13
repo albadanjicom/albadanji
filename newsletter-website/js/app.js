@@ -601,6 +601,31 @@ function savePostingDetail(id) {
   }
 }
 
+// ── Visitor Tracking (Behavior Log) ──
+async function logVisitorData() {
+  try {
+    const currentUrl = window.location.href;
+    
+    // IP 및 지역 정보 가져오기 (무료 IP API 활용)
+    const ipRes = await fetch('https://ipapi.co/json/');
+    const ipData = await ipRes.json();
+    
+    const ip = ipData.ip || '알 수 없음';
+    // '동' 단위까진 IP로 정확히 잡히지 않으므로 시/도 정보를 가져옵니다.
+    const region = (ipData.region || '') + ' ' + (ipData.city || '알 수 없는 지역');
+    
+    // 앱스스크립트로 로깅 요청
+    callAppsScript({
+      action: 'log_visit',
+      url: currentUrl,
+      ip: ip,
+      region: region
+    }, () => {});
+  } catch (error) {
+    console.warn("Visitor logging failed", error);
+  }
+}
+
 // ── Init ──
 document.addEventListener('DOMContentLoaded', () => {
   updateDateHeader();
@@ -610,4 +635,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initLogoTooltip();
   initModal();
   loadPostings();
+  logVisitorData(); // 백그라운드에서 접속자 로그 전송
 });

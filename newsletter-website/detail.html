@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>상세 정보 - 알바단지</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background-color: #ffffff !important;
+      color: #1a1a1a !important;
+      padding-top: var(--space-2xl);
+    }
+    .detail-container {
+      background-color: #ffffff;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: var(--space-xl);
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: var(--space-lg);
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .back-btn:hover {
+      color: var(--text-accent);
+    }
+    .loading-spinner {
+      text-align: center;
+      padding: var(--space-3xl) 0;
+      color: var(--text-muted);
+    }
+    /* Force white background even in dark mode */
+    [data-theme="dark"] body {
+      background-color: #ffffff !important;
+      color: #1a1a1a !important;
+    }
+    [data-theme="dark"] .detail-container {
+       background-color: #ffffff !important;
+       color: #1a1a1a !important;
+    }
+    [data-theme="dark"] .posting-card__info-value {
+      color: #1a1a1a !important;
+    }
+    [data-theme="dark"] .posting-card__info-label {
+      color: #64748b !important;
+    }
+    [data-theme="dark"] .posting-card__title, 
+    [data-theme="dark"] .modal-content__title {
+      color: #0f172a !important;
+    }
+    [data-theme="dark"] .modal-content__body {
+      color: #1a1a1a !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container detail-container">
+    <a href="index.html" class="back-btn">&larr; 홈으로 돌아가기</a>
+    
+    <div id="detail-view">
+      <div class="loading-spinner">내용을 불러오는 중입니다...</div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    // Note: app.js contains escapeHtml, linkify, getEffectiveType, TYPE_CLASS_MAP etc.
+      if (!postingId) {
+        viewEl.innerHTML = '<p>공고 정보를 찾을 수 없습니다.</p>';
+        return;
+      }
+
+      // [FAST PATH] 캐시된 데이터가 있는지 먼저 확인
+      const cached = sessionStorage.getItem('cached_posting_' + postingId);
+      if (cached) {
+        try {
+          const p = JSON.parse(cached);
+          renderDetail(p);
+          console.log("Details loaded from cache.");
+          return; // 성공 시 여기서 종료
+        } catch (e) {
+          console.error("Cache parse error", e);
+        }
+      }
+
+      try {
+        // Fetch live data from GAS (same as app.js)
+        const res = await fetch(`${WEB_APP_URL}?action=get_featured`);
+        const json = await res.json();
+        
+        if (json.status === 'success' && json.data) {
+          const posting = json.data.find(p => p.id === postingId);
+          
+          if (posting) {
+            renderDetail(posting);
+          } else {
+            viewEl.innerHTML = '<p>해당 공고가 존재하지 않거나 종료되었습니다.</p>';
+          }
+        }
+      } catch (e) {
+        console.error("Fetch failed", e);
+        viewEl.innerHTML = '<p>데이터를 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.</p>';
+      }
+    }
+
+    function renderDetail(p) {
+      const viewEl = document.getElementById('detail-view');
+      const effectiveType = getEffectiveType(p);
+      const typeClass = TYPE_CLASS_MAP[effectiveType] || 'posting-card__type--other';
+      const typeIcon = TYPE_ICON_MAP[effectiveType] || '&#128196;';
+      const formattedContent = linkify(escapeHtml(p.survey_content)).replace(/\n/g, '<br>');
+
+      viewEl.innerHTML = `
+        <div class="modal-content__header">
+          <h1 class="modal-content__title" style="margin-top:0;">${escapeHtml(p.title)}</h1>
+          <span class="posting-card__type ${typeClass}">
+            ${typeIcon} ${effectiveType}
+          </span>
+        </div>
+        
+        <div class="posting-card__key-info" style="margin-bottom: var(--space-xl); background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;">
+          ${p.date ? `<div class="posting-card__info-row"><span class="posting-card__info-label">&#128197; 일정</span><span class="posting-card__info-value" style="color:#1a1a1a;">${escapeHtml(p.date)}</span></div>` : ''}
+          ${p.duration ? `<div class="posting-card__info-row"><span class="posting-card__info-label">&#9202; 소요시간</span><span class="posting-card__info-value" style="color:#1a1a1a;">${escapeHtml(p.duration)}</span></div>` : ''}
+          ${p.reward ? `<div class="posting-card__info-row"><span class="posting-card__info-label">&#128176; 사례비</span><span class="posting-card__info-value posting-card__info-value--reward">${escapeHtml(p.reward)}</span></div>` : ''}
+          ${p.location ? `<div class="posting-card__info-row"><span class="posting-card__info-label">&#128205; 장소</span><span class="posting-card__info-value" style="color:#1a1a1a;">${escapeHtml(p.location)}</span></div>` : ''}
+        </div>
+
+        <div class="modal-content__body" style="font-size: 1.1rem; border-top: 1px solid #f1f5f9; padding-top: var(--space-lg); color: #1a1a1a;">
+          ${formattedContent}
+        </div>
+        
+        <div style="margin-top: var(--space-3xl); text-align: center;">
+             <a href="index.html" class="header__cta header__cta--secondary" style="border-radius:20px; padding: 10px 24px;">다른 공고 더 보기</a>
+        </div>
+      `;
+    }
+
+    window.onload = loadDetail;
+  </script>
+</body>
+</html>

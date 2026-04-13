@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📋 조사 아카이브 — 내부 전용</title>
+  <!-- SEO 차단 (검색엔진 인덱싱 방지) -->
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── List Page Specific Styles ── */
+
+    /* Compact header for internal tool */
+    .list-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      padding: var(--space-md) 0;
+    }
+
+    .list-header__inner {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+    }
+
+    .list-header__logo {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      white-space: nowrap;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .list-header__logo span.lock-icon {
+      font-size: 0.85rem;
+      opacity: 0.6;
+    }
+
+    /* Search Bar */
+    .search-container {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      pointer-events: none;
+      color: var(--text-muted);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 44px 10px 40px;
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: all 0.25s ease;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      padding: 2px 6px;
+      border-radius: 50%;
+      transition: all 0.15s ease;
+      display: none;
+      line-height: 1;
+    }
+
+    .search-clear:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .search-clear.visible {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Stats bar */
+    .list-stats {
+      padding: var(--space-md) 0 var(--space-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+    }
+
+    .list-stats__count {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .list-stats__count strong {
+      color: var(--accent-blue);
+      font-weight: 700;
+    }
+
+    .list-stats__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      background: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.15);
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent-blue);
+    }
+
+    .list-stats__line {
+      flex: 1;
+      height: 1px;
+      background: var(--border-color);
+    }
+
+    /* Highlight matching text */
+    .highlight {
+      background: rgba(234, 179, 8, 0.3);
+      border-radius: 2px;
+      padding: 0 1px;
+      font-weight: inherit;
+    }
+
+    [data-theme="dark"] .highlight {
+      background: rgba(234, 179, 8, 0.4);
+      color: #fff;
+    }
+
+    /* Date group header */
+    .date-group {
+      margin-bottom: var(--space-xl);
+    }
+
+    .date-group__header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      margin-bottom: var(--space-md);
+      padding-top: var(--space-md);
+    }
+
+    .date-group__label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .date-group__count-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--border-color);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+
+    .date-group__line {
+      flex: 1;
+      height: 1px;
+      background: var(--border-color);
+    }
+
+    /* No results */
+    .no-results {
+      text-align: center;
+      padding: var(--space-3xl) var(--space-xl);
+      color: var(--text-muted);
+    }
+
+    .no-results__icon {
+      font-size: 3rem;
+      margin-bottom: var(--space-md);
+      opacity: 0.5;
+    }
+
+    .no-results p {
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .no-results .search-query {
+      color: var(--accent-blue);
+      font-weight: 700;
+    }
+
+    /* Posting card source tag */
+    .posting-card__source {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* Scraped-at date in card */
+    .posting-card__scraped {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    /* Card header adjustments for this page */
+    .posting-card__meta-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-top: var(--space-sm);
+      flex-wrap: wrap;
+    }
+
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, var(--border-color) 25%, var(--bg-secondary) 50%, var(--border-color) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-shimmer 1.5s infinite;
+      border-radius: var(--radius-sm);
+    }
+
+    @keyframes skeleton-shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Keyboard shortcut hint */
+    .kbd-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 6px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+    }
+
+    /* Type filter chips below search */
+    .type-chips {
+      display: flex;
+      gap: var(--space-xs);
+      flex-wrap: wrap;
+      padding: var(--space-sm) 0 0;
+    }
+
+    .type-chip {
+      padding: 4px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      color: var(--text-secondary);
+    }
+
+    .type-chip:hover {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .type-chip.active {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* Footer minimal */
+    .list-footer {
+      border-top: 1px solid var(--border-color);
+      padding: var(--space-xl) 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-top: var(--space-2xl);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+  <!-- Theme init (before paint) -->
+  <script>
+    (function() {
+      var t = localStorage.getItem('mr_theme');
+      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="list-header" id="list-header">
+    <div class="container list-header__inner">
+      <div class="list-header__logo">
+        <span class="lock-icon">🔒</span>
+        조사 아카이브
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          class="search-input"
+          id="search-input"
+          placeholder="제목, 사례비, 대상, 조사 내용 검색... (예: 게임, 화장품, 좌담회)"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+        >
+        <button class="search-clear" id="search-clear" title="검색 지우기">✕</button>
+      </div>
+
+      <!-- Keyboard hint -->
+      <div class="kbd-hint">
+        <kbd class="kbd">/</kbd> 검색
+      </div>
+
+      <!-- Theme toggle -->
+      <div class="theme-toggle" id="theme-toggle" title="테마 변경" role="button" tabindex="0">
+        <div class="theme-toggle__icons">
+          <span>☀️</span>
+          <span>🌙</span>
+        </div>
+        <div class="theme-toggle__thumb"></div>
+      </div>
+    </div>
+
+    <!-- Type chips below -->
+    <div class="container">
+      <div class="type-chips" id="type-chips">
+        <button class="type-chip active" data-type="all">전체</button>
+        <button class="type-chip" data-type="좌담회">💬 좌담회</button>
+        <button class="type-chip" data-type="온라인">💻 온라인</button>
+        <button class="type-chip" data-type="맛테스트">🍽 맛테스트</button>
+        <button class="type-chip" data-type="인터뷰">🎤 인터뷰</button>
+        <button class="type-chip" data-type="유치조사">📦 유치조사</button>
+        <button class="type-chip" data-type="기타">📄 기타</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats bar -->
+  <main class="container" id="main-container">
+    <div class="list-stats" id="list-stats">
+      <span class="list-stats__count" id="stats-text">로딩 중...</span>
+      <div class="list-stats__line"></div>
+    </div>
+
+    <!-- Cards container -->
+    <div id="cards-container">
+      <!-- Injected by JS -->
+    </div>
+  </main>
+
+  <footer class="list-footer">
+    🔒 이 페이지는 내부 전용 아카이브입니다. 외부에 공유하지 마세요.
+  </footer>
+
+  <!-- 전체 누적 데이터 (4/5일부터 매일 누적) -->
+  <script src="all_data.js"></script>
+
+  <script>
+    /* ===================================================
+       list.html — Internal Archive Page Logic
+    =================================================== */
+
+    const TYPE_CLASS_MAP = {
+      '좌담회': 'posting-card__type--fgd',
+      '설문조사': 'posting-card__type--online',
+      '온라인': 'posting-card__type--online',
+      '맛테스트': 'posting-card__type--taste',
+      '인터뷰': 'posting-card__type--interview',
+      '유치조사': 'posting-card__type--other',
+      '패널모집': 'posting-card__type--other',
+      '기타': 'posting-card__type--other',
+      '상시모집': 'posting-card__type--always',
+    };
+
+    const TYPE_ICON_MAP = {
+      '좌담회': '💬',
+      '온라인': '💻',
+      '설문조사': '💻',
+      '맛테스트': '🍽',
+      '인터뷰': '🎤',
+      '유치조사': '📦',
+      '패널모집': '👥',
+      '기타': '📄',
+      '상시모집': '🔄',
+    };
+
+    const SOURCE_LABEL = {
+      'albabank': '알바뱅크',
+      'researchi': '리서치아이',
+    };
+
+    let allPostings = [];
+    let currentQuery = '';
+    let currentType = 'all';
+
+    // ── HTML escape ──
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    // ── Determine effective type ──
+    function getEffectiveType(p) {
+      const title = (p.title || '').toLowerCase();
+      const raw = (p.raw_content || '').toLowerCase();
+      if (title.includes('상시') || raw.includes('상시모집')) return '상시모집';
+      if (p.type && p.type !== '기타') return p.type;
+      if (!p.date && !p.time) return '상시모집';
+      return p.type || '기타';
+    }
+
+    // ── Format scraped_at date ──
+    function formatDate(isoStr) {
+      if (!isoStr) return '';
+      const d = new Date(isoStr);
+      if (isNaN(d)) return isoStr.split('T')[0] || '';
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const days = ['일','월','화','수','목','금','토'];
+      return `${y}.${m}.${day} (${days[d.getDay()]})`;
+    }
+
+    // ── Highlight matching text ──
+    function highlightText(text, query) {
+      if (!query || !text) return escapeHtml(text);
+      const escaped = escapeHtml(text);
+      if (!query.trim()) return escaped;
+      const safeQ = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return escaped.replace(new RegExp(`(${safeQ})`, 'gi'), '<mark class="highlight">$1</mark>');
+    }
+
+    // ── Build search text for matching ──
+    // raw_content 제외: 블로그 "다음글/이전글" 링크 텍스트가 섞여 엉뚱한 카드가 검색됨
+    function getSearchText(p) {
+      return [
+        p.title,
+        p.type,
+        p.reward,
+        p.duration,
+        p.date,
+        p.location,
+        p.target_age,
+        p.target_gender,
+        p.target_condition,
+        SOURCE_LABEL[p.source] || p.source,
+      ].filter(Boolean).join(' ').toLowerCase();
+    }
+
+    // ── Render a single card ──
+    function renderCard(p, index, query) {
+      const effectiveType = getEffectiveType(p);
+      const typeClass = TYPE_CLASS_MAP[effectiveType] || 'posting-card__type--other';
+      const typeIcon = TYPE_ICON_MAP[effectiveType] || '📄';
+      const sourceLabel = SOURCE_LABEL[p.source] || p.source || '';
+      const scrapedDate = formatDate(p.scraped_at);
+
+      const keyInfoItems = [];
+      if (p.date) {
+        keyInfoItems.push(`
+          <div class="posting-card__info-row">
+            <span class="posting-card__info-label">📅 일정</span>
+            <span class="posting-card__info-value">${highlightText(p.date, query)}</span>
+          </div>`);
+      }
+      if (p.duration) {
+        keyInfoItems.push(`
+          <div class="posting-card__info-row">
+            <span class="posting-card__info-label">⏱ 소요시간</span>
+            <span class="posting-card__info-value">${highlightText(p.duration, query)}</span>
+          </div>`);
+      }
+      if (p.reward) {
+        keyInfoItems.push(`
+          <div class="posting-card__info-row">
+            <span class="posting-card__info-label">💰 사례비</span>
+            <span class="posting-card__info-value posting-card__info-value--reward">${highlightText(p.reward, query)}</span>
+          </div>`);
+      }
+
+      let targetStr = '';
+      if (p.target_age && p.target_gender) targetStr = `${p.target_age.trim()} ${p.target_gender}`;
+      else if (p.target_age) targetStr = p.target_age.trim();
+      else if (p.target_gender) targetStr = p.target_gender;
+
+      if (targetStr) {
+        keyInfoItems.push(`
+          <div class="posting-card__info-row">
+            <span class="posting-card__info-label">👤 대상</span>
+            <span class="posting-card__info-value">${highlightText(targetStr, query)}</span>
+          </div>`);
+      }
+      if (p.location) {
+        keyInfoItems.push(`
+          <div class="posting-card__info-row">
+            <span class="posting-card__info-label">📍 장소</span>
+            <span class="posting-card__info-value">${highlightText(p.location, query)}</span>
+          </div>`);
+      }
+
+      return `
+        <a href="${escapeHtml(p.source_url)}" target="_blank" rel="noopener noreferrer"
+           class="posting-card" data-type="${escapeHtml(effectiveType)}"
+           style="animation-delay: ${Math.min(index * 0.03, 0.6)}s" id="card-${escapeHtml(p.id || String(index))}">
+          <div class="posting-card__header">
+            <span class="posting-card__title">${highlightText(p.title, query)}</span>
+            <span class="posting-card__type ${typeClass}">${typeIcon} ${escapeHtml(effectiveType)}</span>
+          </div>
+          ${keyInfoItems.length > 0 ? `<div class="posting-card__key-info">${keyInfoItems.join('')}</div>` : ''}
+          <div class="posting-card__meta-row">
+            ${sourceLabel ? `<span class="posting-card__source">📡 ${escapeHtml(sourceLabel)}</span>` : ''}
+            ${scrapedDate ? `<span class="posting-card__scraped">수집: ${scrapedDate}</span>` : ''}
+          </div>
+        </a>
+      `;
+    }
+
+    // ── Group postings by scraped date ──
+    function groupByDate(postings) {
+      const groups = {};
+      postings.forEach(p => {
+        const key = p.scraped_at ? p.scraped_at.split('T')[0] : '날짜 미상';
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(p);
+      });
+      // Sort dates descending (newest first)
+      return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
+    }
+
+    // ── Render all cards ──
+    function renderCards(postings, query) {
+      const container = document.getElementById('cards-container');
+      const statsText = document.getElementById('stats-text');
+      if (!container) return;
+
+      if (!postings || postings.length === 0) {
+        const qDisplay = query ? `<span class="search-query">"${escapeHtml(query)}"</span>` : '';
+        container.innerHTML = `
+          <div class="no-results">
+            <div class="no-results__icon">🔍</div>
+            <p>${qDisplay ? `${qDisplay} 검색 결과가 없습니다.` : '공고가 없습니다.'}</p>
+          </div>
+        `;
+        if (statsText) statsText.innerHTML = `<strong>0</strong>건 표시`;
+        return;
+      }
+
+      const groups = groupByDate(postings);
+      let html = '';
+      let idx = 0;
+
+      groups.forEach(([date, items]) => {
+        const labelDate = date !== '날짜 미상'
+          ? (() => {
+              const d = new Date(date);
+              const days = ['일','월','화','수','목','금','토'];
+              return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} (${days[d.getDay()]}) 수집`;
+            })()
+          : '날짜 미상';
+
+        html += `
+          <div class="date-group">
+            <div class="date-group__header">
+              <span class="date-group__label">📂 ${labelDate}</span>
+              <span class="date-group__count-badge">${items.length}건</span>
+              <div class="date-group__line"></div>
+            </div>
+            ${items.map((p, i) => renderCard(p, idx++, query)).join('')}
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+
+      // Stats
+      const totalAll = allPostings.length;
+      if (statsText) {
+        if (query || currentType !== 'all') {
+          statsText.innerHTML = `<strong>${postings.length}</strong>건 표시 / 전체 ${totalAll}건`;
+        } else {
+          statsText.innerHTML = `전체 <strong>${totalAll}</strong>건 — 시간 역순 정렬`;
+        }
+      }
+    }
+
+    // ── Filter & search logic ──
+    function applyFilters() {
+      const query = currentQuery.toLowerCase().trim();
+      const type = currentType;
+
+      let result = allPostings;
+
+      // Type filter
+      if (type !== 'all') {
+        result = result.filter(p => {
+          const et = getEffectiveType(p);
+          return et === type || p.type === type;
+        });
+      }
+
+      // Text search
+      if (query) {
+        result = result.filter(p => getSearchText(p).includes(query));
+      }
+
+      renderCards(result, currentQuery.trim());
+    }
+
+    // ── Sort all postings by scraped_at desc ──
+    function sortByScrapedAt(postings) {
+      return [...postings].sort((a, b) => {
+        const da = a.scraped_at || '';
+        const db = b.scraped_at || '';
+        return db.localeCompare(da);
+      });
+    }
+
+    // ── Init search ──
+    function initSearch() {
+      const input = document.getElementById('search-input');
+      const clearBtn = document.getElementById('search-clear');
+      if (!input) return;
+
+      let debounceTimer;
+
+      input.addEventListener('input', () => {
+        currentQuery = input.value;
+        clearBtn.classList.toggle('visible', currentQuery.length > 0);
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(applyFilters, 180);
+      });
+
+      clearBtn.addEventListener('click', () => {
+        input.value = '';
+        currentQuery = '';
+        clearBtn.classList.remove('visible');
+        input.focus();
+        applyFilters();
+      });
+
+      // '/' key to focus search
+      document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement !== input) {
+          e.preventDefault();
+          input.focus();
+          input.select();
+        }
+        if (e.key === 'Escape' && document.activeElement === input) {
+          input.blur();
+        }
+      });
+    }
+
+    // ── Init type chips ──
+    function initTypeChips() {
+      const chips = document.querySelectorAll('.type-chip');
+      chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          chips.forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          currentType = chip.dataset.type;
+          applyFilters();
+        });
+      });
+    }
+
+    // ── Theme toggle ──
+    function initThemeToggle() {
+      const toggle = document.getElementById('theme-toggle');
+      if (!toggle) return;
+      toggle.addEventListener('click', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+          document.documentElement.removeAttribute('data-theme');
+          localStorage.setItem('mr_theme', 'light');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          localStorage.setItem('mr_theme', 'dark');
+        }
+      });
+      toggle.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle.click(); }
+      });
+    }
+
+    // ── Load data ──
+    // all_data.js (4/5~오늘 전체 누적) 우선, 없으면 data.js 당일치 fallback
+    function loadData() {
+      if (window.allPostingsData) {
+        const raw = window.allPostingsData.postings || [];
+        allPostings = sortByScrapedAt(raw);
+        applyFilters();
+        return;
+      }
+
+      // fallback: 당일 data.js
+      if (window.postingsData) {
+        const raw = window.postingsData.postings || window.postingsData;
+        allPostings = sortByScrapedAt(raw);
+        applyFilters();
+        return;
+      }
+
+      // fallback: fetch
+      fetch('all_data.js')
+        .then(() => fetch('data.json'))
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data) {
+            allPostings = sortByScrapedAt(data.postings || data);
+            applyFilters();
+          }
+        })
+        .catch(() => {});
+    }
+
+    // ── Init ──
+    document.addEventListener('DOMContentLoaded', () => {
+      initSearch();
+      initTypeChips();
+      initThemeToggle();
+      loadData();
+
+      // Focus search on load
+      setTimeout(() => {
+        const input = document.getElementById('search-input');
+        if (input) input.focus();
+      }, 300);
+    });
+  </script>
+</body>
+</html>

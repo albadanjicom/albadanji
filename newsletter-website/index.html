@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>알바단지 - 시장조사 좌담회 모집 정보</title>
+  <meta name="description" content="매일 업데이트되는 알바단지 시장조사 좌담회, 설문조사, 인터뷰, 맛테스트 모집 정보를 한눈에 확인하세요.">
+  <meta name="keywords" content="알바단지, 알바, 좌담회, 시장조사, 설문조사, 인터뷰, 리뷰 알바, 꿀알바, 직장인 투잡">
+  <link rel="canonical" href="https://www.albadanji.com/">
+  <meta property="og:title" content="알바단지 - 시장조사 좌담회 등 꿀알바 모집 정보">
+  <meta property="og:description" content="알바단지에서 매일 업데이트되는 좌담회, 설문조사 모집 공고를 가장 빠르게 받아보세요.">
+  <meta property="og:url" content="https://www.albadanji.com/">
+  <meta property="og:image" content="https://www.albadanji.com/images/og-image.png">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="style.css">
+  <!-- Theme init (before paint to prevent flash) -->
+  <script>
+    (function() {
+      var t = localStorage.getItem('mr_theme');
+      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header" id="header">
+    <div class="container header__inner">
+      <a href="index.html" class="header__logo">
+        <span>알바단지</span>
+        <div class="logo-tooltip" id="logo-tooltip">Loading weather...</div>
+      </a>
+      <nav class="header__nav">
+        <a href="index.html" class="header__link">홈</a>
+        <a href="archive.html" class="header__link">지난 뉴스레터</a>
+        <form class="subscribe-form nav-subscribe-form">
+          <input type="email" class="nav-subscribe-input" placeholder="이메일 주소" required autocomplete="email">
+          <button type="submit" class="header__cta">무료 구독하기</button>
+        </form>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero" id="hero">
+    <div class="hero__glow hero__glow--1"></div>
+    <div class="hero__glow hero__glow--2"></div>
+    <div class="container hero__container">
+      <div class="hero__content">
+        <h1 class="hero__title">
+          <span style="display:inline-block; font-size:0.5em; margin-bottom:10px; color:var(--text-accent);">알바단지</span><br>
+          시장조사 참여 기회를<br>매일 아침 배달해 드립니다
+        </h1>
+        <p class="hero__subtitle">
+          좌담회 · 설문조사 · 인터뷰 · 맛테스트 등 흩어져 있는<br>
+          알바단지 특급 꿀알바 정보를 가장 빠르게 확인하세요.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Date Header + Filters -->
+  <section class="container">
+    <div class="date-header" id="date-header">
+      <span class="date-header__date" id="current-date">Loading...</span>
+      <span class="date-header__count" id="posting-count">- : 오늘 아침5시 새롭게 추가된 공고</span>
+      <div class="date-header__line"></div>
+    </div>
+
+    <div class="filters" id="filters">
+      <button class="filter-btn" data-filter="all" id="filter-all">All</button>
+      <button class="filter-btn active" data-filter="urgent" id="filter-urgent">임박</button>
+      <button class="filter-btn" data-filter="좌담회" id="filter-fgd">좌담회</button>
+      <button class="filter-btn" data-filter="온라인" id="filter-online">온라인</button>
+      <button class="filter-btn" data-filter="맛테스트" id="filter-taste">맛테스트</button>
+      <button class="filter-btn" data-filter="인터뷰" id="filter-interview">인터뷰</button>
+      <button class="filter-btn" data-filter="유치조사" id="filter-uci">유치조사</button>
+      <button class="filter-btn" data-filter="기타" id="filter-other">기타</button>
+      <button class="filter-btn" data-filter="상시모집" id="filter-always">상시모집</button>
+    </div>
+  </section>
+
+  <!-- Postings List -->
+  <main class="container" id="postings-container">
+    <div id="postings-list">
+      <!-- Postings will be injected by newsletter_builder.py -->
+      <div class="no-results" id="no-results">
+        <div class="no-results__icon">&#128269;</div>
+        <p>Loading postings data...</p>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- Footer -->
+  <footer class="footer" id="footer">
+    <div class="container">
+      <p class="footer__text">&copy; 2026 Albadanji. All rights reserved.</p>
+      <div class="footer__links">
+        <a href="archive.html" class="footer__link">지난 뉴스레터</a>
+        <a href="subscribe.html" class="footer__link">구독 하기</a>
+        <a href="subscribe.html" class="footer__link">구독 취소</a>
+        <div class="theme-toggle" id="theme-toggle" title="테마 변경" role="button" tabindex="0">
+          <div class="theme-toggle__icons">
+            <span>&#9728;&#65039;</span>
+            <span>&#127769;</span>
+          </div>
+          <div class="theme-toggle__thumb"></div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Detail Modal -->
+  <div id="detail-modal" class="modal-overlay">
+    <div class="modal-container glass-panel">
+      <button class="modal-close" id="modal-close">&times;</button>
+      <div id="modal-content-area">
+        <!-- Content will be injected by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

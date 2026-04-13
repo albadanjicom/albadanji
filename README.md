@@ -74,4 +74,4 @@ python execution/run_daily.py
 - **이메일 발송 실패**: 구글 계정의 앱 비밀번호가 유효한지, 혹은 `.env`에 오타가 없는지 확인하세요.
 
 ---
-**문의: 알바단지 관리자 (albadangicom@gmail.com)**
+**문의: 알바단지 관리자 (albadaniicom@gmail.com)**

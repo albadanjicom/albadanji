@@ -204,10 +204,11 @@ def build_email_posting_html(posting: dict) -> str:
         '''
         
     if posting.get("survey_content"):
-        content_html = posting['survey_content'].replace('\n', '<br>')
+        site_url = ENV.get("SITE_URL", "https://www.albadanji.com")
+        detail_url = f"{site_url}/detail.html?id={posting.get('id', '')}"
         meta_html += f'''
-          <div style="margin-top: 12px; padding: 12px; background-color: #F1F5F9; border-left: 3px solid #3B82F6; border-radius: 0 4px 4px 0; color: #334155; font-size: 13px; line-height: 1.6;">
-            {content_html}
+          <div style="margin-top: 12px; text-align: center;">
+            <a href="{detail_url}" target="_blank" style="display: inline-block; padding: 10px 20px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; color: #2563EB; text-decoration: none; font-size: 14px; font-weight: 600;">&#128269; 상세 내용 보기</a>
           </div>
         '''
 

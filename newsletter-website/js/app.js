@@ -602,29 +602,50 @@ function savePostingDetail(id) {
 }
 
 // ── Visitor Tracking (Behavior Log) ──
-async function logVisitorData() {
+let cachedVisitorInfo = null;
+
+async function trackActivity(activityType, targetInfo = '') {
   try {
-    const currentUrl = window.location.href;
-    
-    // IP 및 지역 정보 가져오기 (무료 IP API 활용)
-    const ipRes = await fetch('https://ipapi.co/json/');
-    const ipData = await ipRes.json();
-    
-    const ip = ipData.ip || '알 수 없음';
-    // '동' 단위까진 IP로 정확히 잡히지 않으므로 시/도 정보를 가져옵니다.
-    const region = (ipData.region || '') + ' ' + (ipData.city || '알 수 없는 지역');
-    
-    // 앱스스크립트로 로깅 요청
-    callAppsScript({
-      action: 'log_visit',
-      url: currentUrl,
-      ip: ip,
-      region: region
-    }, () => {});
+    if (!cachedVisitorInfo) {
+      const ipRes = await fetch('https://ipapi.co/json/');
+      const ipData = await ipRes.json();
+      const ip = ipData.ip || '알 수 없음';
+      const region = (ipData.region || '') + ' ' + (ipData.city || '알 수 없는 지역');
+      cachedVisitorInfo = { ip, region };
+    }
+
+    let urlInfo = window.location.href;
+    if (activityType === 'click') {
+      urlInfo = "[공고 클릭] " + targetInfo;
+    }
+
+    fetch(WEB_APP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      keepalive: true, // 페이지 이동 시 요청 취소 방지
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'log_visit',
+        url: urlInfo,
+        ip: cachedVisitorInfo.ip,
+        region: cachedVisitorInfo.region
+      })
+    });
   } catch (error) {
     console.warn("Visitor logging failed", error);
   }
 }
+
+// 공고 클릭 이벤트 추적
+document.addEventListener('click', (e) => {
+  const card = e.target.closest('.posting-card');
+  if (card) {
+    const titleEl = card.querySelector('.posting-card__title');
+    if (titleEl) {
+       trackActivity('click', titleEl.textContent.trim());
+    }
+  }
+});
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', () => {
@@ -635,5 +656,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initLogoTooltip();
   initModal();
   loadPostings();
-  logVisitorData(); // 백그라운드에서 접속자 로그 전송
+  trackActivity('page_load'); // 접속 로그
 });

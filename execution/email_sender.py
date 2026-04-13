@@ -130,7 +130,7 @@ def send_newsletters(dry_run=False):
     
     return {"success": success_count, "fail": fail_count, "total": len(subscribers)}
 
-def send_admin_report(stats, posting_count):
+def send_admin_report(stats, postings_list):
     """관리자에게 일일 업무 보고서를 발송합니다."""
     env = load_env()
     GMAIL_USER = env.get('GMAIL_USER')
@@ -147,15 +147,28 @@ def send_admin_report(stats, posting_count):
     msg['From'] = f"알바단지 시스템 <{GMAIL_USER}>"
     msg['To'] = ADMIN_EMAIL
     
+    posting_count = 0
+    source_summary = ""
+    if isinstance(postings_list, int):
+        posting_count = postings_list
+    else:
+        posting_count = len(postings_list)
+        from collections import Counter
+        counts = Counter(p.get('source', '기타') for p in postings_list)
+        source_summary = "\n   [출처별 수집 상세]\n"
+        for src, cnt in counts.most_common():
+            source_summary += f"   - {src}: {cnt}건\n"
+
     content = f"""
 안녕하세요, 관리자님.
 {today_str} 알바단지 뉴스레터 발행 결과를 보고드립니다.
 
-1. 신규 공고 수집: {posting_count}건
-2. 이메일 발송 현황
-   - 총 대상자: {stats['total']}명
-   - 발송 성공: {stats['success']}건
-   - 발송 실패: {stats['fail']}건
+1. 신규 공고 수집 요약
+   - 총 수집 건수: {posting_count}건{source_summary}
+2. 뉴스레터 이메일 발송 현황
+   - 총 대상자: {stats.get('total', 0)}명
+   - 발송 성공: {stats.get('success', 0)}건
+   - 발송 실패: {stats.get('fail', 0)}건
 
 오늘의 업무가 성공적으로 완료되었습니다.
 감사합니다.

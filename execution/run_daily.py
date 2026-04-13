@@ -51,7 +51,7 @@ def run_daily():
         
         # Step 4: 보고서 발송
         print("\n[Step 4/4] Sending report to admin...")
-        send_admin_report(stats, len(postings))
+        send_admin_report(stats, postings)
     except Exception as e:
         print(f"  [Error] 이메일 발송 또는 보고 모듈 실패: {e}")
         

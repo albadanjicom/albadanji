@@ -1,6 +1,6 @@
 window.postingsData = {
   "date": "2026-04-13",
-  "generated_at": "2026-04-13T11:37:51.553602",
+  "generated_at": "2026-04-13T17:47:52.006116",
   "count": 10,
   "postings": [
     {

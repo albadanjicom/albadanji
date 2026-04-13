@@ -1,29 +1,8 @@
 window.postingsData = {
   "date": "2026-04-13",
-  "generated_at": "2026-04-13T17:47:52.006116",
-  "count": 10,
+  "generated_at": "2026-04-13T17:48:04.760299",
+  "count": 9,
   "postings": [
-    {
-      "id": "mr_1775879101023_518",
-      "title": "최근 3개월 내 주류 소비 경험이 있으신 분 온라인 좌담회 / 만 19-40세남녀",
-      "source": "알바단지 자체",
-      "source_url": "https://forms.gle/6gTnbyVERzoCEZ7G9",
-      "target_age": "만 19-40세남녀",
-      "target_gender": null,
-      "target_condition": null,
-      "date": null,
-      "time": null,
-      "duration": "1시간",
-      "reward": "50,000원",
-      "location": "온라인",
-      "type": "좌담회",
-      "raw_content": null,
-      "scraped_at": "2026-04-13T11:30:54.309932",
-      "is_active": 1,
-      "url_hash": null,
-      "is_featured": 1,
-      "survey_content": "[모집대상]\n\n1) 한국에 거주하는 ** 만 19-40세 ** 남녀\n\n2) 최근 3개월 이내에 주류 소비 경험이 있으신 분\n\n3) 카메라가 있는 노트북 및 기기를 통해 온라인으로 조사 참여가 가능하신 분\n\n-------------------------------------------------------------------\n\n[조사안내]\n\n■ 방식: 온라인 좌담회\n\n■ 일정: 2026년 4월23일(목)~24일(금) 중 한 타임 (60분)\n\n■ 사례금: 5만원\n\n■ 신청링크(구글폼): https://forms.gle/6gTnbyVERzoCEZ7G9"
-    },
     {
       "id": "2ced468e8c3976bcb429fd191340d1fb",
       "title": "만 23~24세 남성 흡연자 ) 기호식품 관련 온라인 설문조사(10분 내외 소요)",

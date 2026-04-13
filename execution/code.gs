@@ -24,6 +24,7 @@ function doPost(e) {
   // 이메일 소문자 정규화 + 공백 제거
   var email = (params.email || '').trim().toLowerCase();
   var action = params.action || 'subscribe';
+  var timeStamp = Utilities.formatDate(new Date(), "GMT+09:00", "yyyy-MM-dd HH:mm:ss");
   
   if(!email) {
     return ContentService.createTextOutput(JSON.stringify({'status': 'error', 'message': 'Email required'}))

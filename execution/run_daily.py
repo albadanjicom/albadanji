@@ -55,9 +55,17 @@ def run_daily():
     except Exception as e:
         print(f"  [Error] 이메일 발송 또는 보고 모듈 실패: {e}")
         
-    # Step 5: 웹사이트 업데이트 (GitHub Deploy) - 사용자에 의해 비활성화됨
-    print("\n[Step 5/5] Deploying website via GitHub... (Skipped)")
-    # 자동 배포를 하지 않도록 요청되어 기존 git push 로직을 주석 처리/삭제했습니다.
+    # Step 5: 웹사이트 업데이트 (GitHub Deploy)
+    print("\n[Step 5/5] Deploying website via GitHub...")
+    try:
+        import subprocess
+        subprocess.run(["git", "add", "newsletter-website/"], cwd=project_root, check=True)
+        # 커밋할 내용이 없을 수도 있으므로 check=False를 사용
+        subprocess.run(["git", "commit", "-m", f"Auto-update website data: {datetime.now().strftime('%Y-%m-%d')}"], cwd=project_root)
+        subprocess.run(["git", "push", "origin", "main"], cwd=project_root, check=True)
+        print("  [성공] 웹사이트가 성공적으로 깃허브에 배포(Push) 되었습니다.")
+    except Exception as e:
+        print(f"  [Error] 웹사이트 배포 실패 (깃허브 연동 오류 등): {e}")
         
     print("\n" + "=" * 60)
     print("  DAILY RUN COMPLETE!")

@@ -59,10 +59,10 @@ def run_daily():
     print("\n[Step 5/5] Deploying website via GitHub...")
     try:
         import subprocess
-        subprocess.run(["git", "add", "newsletter-website/"], cwd=project_root, check=True)
+        subprocess.run(["git", "add", "newsletter-website/"], cwd=PROJECT_ROOT, check=True)
         # 커밋할 내용이 없을 수도 있으므로 check=False를 사용
-        subprocess.run(["git", "commit", "-m", f"Auto-update website data: {datetime.now().strftime('%Y-%m-%d')}"], cwd=project_root)
-        subprocess.run(["git", "push", "origin", "main"], cwd=project_root, check=True)
+        subprocess.run(["git", "commit", "-m", f"Auto-update website data: {datetime.now().strftime('%Y-%m-%d')}"], cwd=PROJECT_ROOT)
+        subprocess.run(["git", "push", "origin", "main"], cwd=PROJECT_ROOT, check=True)
         print("  [성공] 웹사이트가 성공적으로 깃허브에 배포(Push) 되었습니다.")
     except Exception as e:
         print(f"  [Error] 웹사이트 배포 실패 (깃허브 연동 오류 등): {e}")

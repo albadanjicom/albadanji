@@ -239,28 +239,21 @@ class AlbabankScraper(BaseScraper):
         raw = content_el.get_text(separator="\n", strip=True)
         info = {"raw_content": raw[:2000]}
 
-        # *를 줄바꿈으로 치환하여 각 필드를 분리 (albabank 패턴)
-        normalized = raw.replace("*", "\n")
+        normalized = raw.replace("*", "\n").replace("◈", "\n").replace("◆", "\n").replace("▶", "\n").replace("ㅣ", "\n").replace("|", "\n").replace("■", "\n").replace("●", "\n")
+        sep = r"[\s:：)=\-]*"
 
-        # 사례비 추출 (정확한 필드명 매칭 우선)
-        reward_match = re.search(r"(사례비|참석비|참여비|보상)\s*[:：]\s*(.+)", normalized)
-        if reward_match:
-            info["reward"] = reward_match.group(2).strip()
+        reward_match = re.search(fr"(사\s*례\s*비|참\s*석\s*비|참\s*여\s*비|보\s*상|사\s*례\s*금){sep}(.+)", normalized)
+        if reward_match: info["reward"] = reward_match.group(2).strip().split('\n')[0]
 
-        # 소요시간 추출
-        duration_match = re.search(r"소요\s*시간\s*[:：]\s*(.+)", normalized)
-        if duration_match:
-            info["duration"] = duration_match.group(1).strip()
+        duration_match = re.search(fr"(소요\s*시간|진행\s*시간|소요){sep}(.+)", normalized)
+        if duration_match: info["duration"] = duration_match.group(2).strip().split('\n')[0]
 
-        # 장소 추출
-        loc_match = re.search(r"(장소|위치)\s*[:：]\s*(.+)", normalized)
-        if loc_match:
-            info["location"] = loc_match.group(2).strip()
+        loc_match = re.search(fr"(위\s*치|장\s*소|진행\s*장소){sep}(.+)", normalized)
+        if loc_match: info["location"] = loc_match.group(2).strip().split('\n')[0]
 
-        # 대상 추출
-        target_match = re.search(r"(대상\s*조건|대상|조건)\s*[:：\-]\s*(.+)", normalized)
+        target_match = re.search(fr"(대\s*상\s*조\s*건|대\s*상|조\s*건|참여\s*대상){sep}(.+)", normalized)
         if target_match:
-            target_text = target_match.group(2).strip()
+            target_text = target_match.group(2).strip().split('\n')[0]
             info["target_condition"] = target_text
             # 성별
             if "여성" in target_text and "남" not in target_text:
@@ -278,15 +271,12 @@ class AlbabankScraper(BaseScraper):
                 if age_match2:
                     info["target_age"] = age_match2.group(1)
 
-        # 일정 추출
-        date_match = re.search(r"(일정|날짜|일시|조사\s*기간|조사\s*일자)\s*[:：]\s*(.+)", normalized)
-        if date_match:
-            info["date"] = date_match.group(2).strip()
+        date_match = re.search(fr"(일\s*정|날\s*짜|일\s*시|조사\s*기간|조사\s*일자|진행\s*일){sep}(.+)", normalized)
+        if date_match: info["date"] = date_match.group(2).strip().split('\n')[0]
 
-        # 시간 추출
-        time_match = re.search(r"(시간|진행\s*시간)\s*[:：]\s*(.+)", normalized)
+        time_match = re.search(fr"(시간|진행\s*시간){sep}(.+)", normalized)
         if time_match and "소요" not in time_match.group(0):
-            info["time"] = time_match.group(2).strip()
+            info["time"] = time_match.group(2).strip().split('\n')[0]
 
         time.sleep(0.5)
         return info
@@ -645,22 +635,20 @@ class ResearchiScraper(BaseScraper):
 
             raw = content_el.get_text(separator="\n", strip=True)
             info = {"raw_content": raw[:2000]}
-            # *는 줄바꿈으로 보되, -는 날짜 형식을 위해 유지. 특수 공백 처리.
-            normalized = raw.replace("*", "\n").replace("\u200b", "").replace("\xa0", " ")
+            normalized = raw.replace("*", "\n").replace("\u200b", "").replace("\xa0", " ").replace("◈", "\n").replace("◆", "\n").replace("▶", "\n").replace("ㅣ", "\n").replace("|", "\n").replace("■", "\n").replace("●", "\n")
 
-            # 정규표현식 보강: 콜론 주변 다양한 공백 처리 및 키워드 확장
-            sep = r"[\s:：\-]*"
+            sep = r"[\s:：)=\-]*"
             
-            reward_match = re.search(fr"(사례비|참석비|참여비|보상|사례금){sep}(.+)", normalized)
+            reward_match = re.search(fr"(사\s*례\s*비|참\s*석\s*비|참\s*여\s*비|보\s*상|사\s*례\s*금){sep}(.+)", normalized)
             if reward_match: info["reward"] = reward_match.group(2).strip().split('\n')[0]
 
             duration_match = re.search(fr"(소요\s*시간|진행\s*시간|소요){sep}(.+)", normalized)
             if duration_match: info["duration"] = duration_match.group(2).strip().split('\n')[0]
 
-            loc_match = re.search(fr"(장소|위치|진행장소){sep}(.+)", normalized)
+            loc_match = re.search(fr"(위\s*치|장\s*소|진행\s*장소){sep}(.+)", normalized)
             if loc_match: info["location"] = loc_match.group(2).strip().split('\n')[0]
 
-            target_match = re.search(fr"(대상\s*조건|대상|조건|참여\s*대상){sep}(.+)", normalized)
+            target_match = re.search(fr"(대\s*상\s*조\s*건|대\s*상|조\s*건|참여\s*대상){sep}(.+)", normalized)
             if target_match:
                 target_text = target_match.group(2).strip().split('\n')[0]
                 info["target_condition"] = target_text
@@ -670,7 +658,7 @@ class ResearchiScraper(BaseScraper):
                 age_match = re.search(r"(만?\s*\d+[~\-]\s*\d+세|\d+세|\d+대)", target_text)
                 if age_match: info["target_age"] = age_match.group(1)
 
-            date_match = re.search(fr"(일정|날짜|일시|조사\s*기간|조사\s*일자|진행\s*일){sep}(.+)", normalized)
+            date_match = re.search(fr"(일\s*정|날\s*짜|일\s*시|조사\s*기간|조사\s*일자|진행\s*일){sep}(.+)", normalized)
             if date_match: info["date"] = date_match.group(2).strip().split('\n')[0]
 
             time_match = re.search(fr"(시간|진행\s*시간){sep}(.+)", normalized)
@@ -778,26 +766,22 @@ class NaverCafeScraper(BaseScraper):
             time.sleep(2)
             body_text = driver.find_element(By.TAG_NAME, "body").text
             info["raw_content"] = body_text[:2000]
-            normalized = body_text.replace("*", "\n").replace("◈", "\n").replace("◆", "\n").replace("▶", "\n")
+            normalized = body_text.replace("*", "\n").replace("◈", "\n").replace("◆", "\n").replace("▶", "\n").replace("ㅣ", "\n").replace("|", "\n").replace("■", "\n").replace("●", "\n")
+            sep = r"[\s:：)=\-]*"
 
-            # 사례비
-            m = re.search(r"(사\s*례\s*비|참석비|참여비|보상|사례금)\s*[:：)]\s*(.+)", normalized)
+            m = re.search(fr"(사\s*례\s*비|참\s*석\s*비|참\s*여\s*비|보\s*상|사\s*례\s*금){sep}(.+)", normalized)
             if m: info["reward"] = m.group(2).strip().split("\n")[0]
 
-            # 소요시간
-            m = re.search(r"(소요\s*시간|진행\s*시간|소요)\s*[:：)]\s*(.+)", normalized)
+            m = re.search(fr"(소요\s*시간|진행\s*시간|소요){sep}(.+)", normalized)
             if m: info["duration"] = m.group(2).strip().split("\n")[0]
 
-            # 위치/장소
-            m = re.search(r"(위\s*치|장\s*소|진행\s*장소)\s*[:：)]\s*(.+)", normalized)
+            m = re.search(fr"(위\s*치|장\s*소|진행\s*장소){sep}(.+)", normalized)
             if m: info["location"] = m.group(2).strip().split("\n")[0]
 
-            # 일정/날짜
-            m = re.search(r"(일\s*정|날\s*짜|일\s*시|조사\s*기간|조사\s*일자|진행\s*일)\s*[:：)]\s*(.+)", normalized)
+            m = re.search(fr"(일\s*정|날\s*짜|일\s*시|조사\s*기간|조사\s*일자|진행\s*일){sep}(.+)", normalized)
             if m: info["date"] = m.group(2).strip().split("\n")[0]
 
-            # 대상/조건
-            m = re.search(r"(대\s*상\s*조\s*건|대\s*상|조\s*건|참여\s*대상)\s*[:：)]\s*(.+)", normalized)
+            m = re.search(fr"(대\s*상\s*조\s*건|대\s*상|조\s*건|참여\s*대상){sep}(.+)", normalized)
             if m:
                 target = m.group(2).strip().split("\n")[0]
                 info["target_condition"] = target
@@ -907,21 +891,22 @@ class DaumCafeScraper(BaseScraper):
             time.sleep(2)
             body_text = driver.find_element(By.TAG_NAME, "body").text
             info["raw_content"] = body_text[:2000]
-            normalized = body_text.replace("*", "\n").replace("◈", "\n").replace("◆", "\n").replace("▶", "\n")
+            normalized = body_text.replace("*", "\n").replace("◈", "\n").replace("◆", "\n").replace("▶", "\n").replace("ㅣ", "\n").replace("|", "\n").replace("■", "\n").replace("●", "\n")
+            sep = r"[\s:：)=\-]*"
 
-            m = re.search(r"(사\s*례\s*비|참석비|참여비|보상|사례금)\s*[:：)]\s*(.+)", normalized)
+            m = re.search(fr"(사\s*례\s*비|참\s*석\s*비|참\s*여\s*비|보\s*상|사\s*례\s*금){sep}(.+)", normalized)
             if m: info["reward"] = m.group(2).strip().split("\n")[0]
 
-            m = re.search(r"(소요\s*시간|진행\s*시간|소요)\s*[:：)]\s*(.+)", normalized)
+            m = re.search(fr"(소요\s*시간|진행\s*시간|소요){sep}(.+)", normalized)
             if m: info["duration"] = m.group(2).strip().split("\n")[0]
 
-            m = re.search(r"(위\s*치|장\s*소|진행\s*장소)\s*[:：)]\s*(.+)", normalized)
+            m = re.search(fr"(위\s*치|장\s*소|진행\s*장소){sep}(.+)", normalized)
             if m: info["location"] = m.group(2).strip().split("\n")[0]
 
-            m = re.search(r"(일\s*정|날\s*짜|일\s*시|조사\s*기간|조사\s*일자|진행\s*일)\s*[:：)]\s*(.+)", normalized)
+            m = re.search(fr"(일\s*정|날\s*짜|일\s*시|조사\s*기간|조사\s*일자|진행\s*일){sep}(.+)", normalized)
             if m: info["date"] = m.group(2).strip().split("\n")[0]
 
-            m = re.search(r"(대\s*상\s*조\s*건|대\s*상|조\s*건|참여\s*대상)\s*[:：)]\s*(.+)", normalized)
+            m = re.search(fr"(대\s*상\s*조\s*건|대\s*상|조\s*건|참여\s*대상){sep}(.+)", normalized)
             if m:
                 target = m.group(2).strip().split("\n")[0]
                 info["target_condition"] = target

@@ -1,8 +1,7 @@
 import os
-import boto3
-from botocore.exceptions import ClientError
 import json
 import urllib.request
+import smtplib
 from email.message import EmailMessage
 from datetime import datetime
 import time
@@ -56,13 +55,11 @@ def send_newsletters(dry_run=False):
     
     env = load_env()
     WEB_APP_URL = env.get('WEB_APP_URL')
-    AWS_ACCESS_KEY_ID = env.get('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = env.get('AWS_SECRET_ACCESS_KEY')
-    AWS_REGION = env.get('AWS_REGION', 'ap-northeast-2')
-    AWS_SES_SENDER_EMAIL = env.get('AWS_SES_SENDER_EMAIL')
+    SMTP_USER = env.get('SMTP_USER')
+    SMTP_APP_PASSWORD = env.get('SMTP_APP_PASSWORD')
     
-    if not all([WEB_APP_URL, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SES_SENDER_EMAIL]):
-        print("  [오류] .env 파일에 필요한 계정 정보(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SES_SENDER_EMAIL)가 누락되었습니다.")
+    if not all([WEB_APP_URL, SMTP_USER, SMTP_APP_PASSWORD]):
+        print("  [오류] .env 파일에 필요한 계정 정보(SMTP_USER, SMTP_APP_PASSWORD)가 누락되었습니다.")
         return {"success": 0, "fail": 0, "total": 0}
         
     # 2. 이번에 보낼 HTML 파일 확인
@@ -87,52 +84,61 @@ def send_newsletters(dry_run=False):
     
     print(f"  [2/4] 총 {len(subscribers)}명의 활성 구독자를 찾았습니다.")
     
-    # 4. 발송 진행 (AWS SES)
-    print("  [3/4] AWS SES 클라이언트를 초기화합니다...")
+    # 4. 발송 진행 (SMTP)
+    print("  [3/4] 구글 SMTP 서버에 로그인합니다...")
     success_count = 0
     fail_count = 0
     
+    server = None
     try:
         if not dry_run:
-            ses_client = boto3.client(
-                'ses',
-                region_name=AWS_REGION,
-                aws_access_key_id=AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=AWS_SECRET_ACCESS_KEY
-            )
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(SMTP_USER, SMTP_APP_PASSWORD)
     except Exception as e:
-        print(f"  [접속 오류] AWS SES 클라이언트 초기화에 실패했습니다.\n  - 에러: {e}")
+        print(f"  [접속 오류] SMTP 서버 로그인에 실패했습니다. (앱 비밀번호 혹은 계정명 확인 필요)\n  - 에러: {e}")
         return {"success": 0, "fail": 0, "total": len(subscribers)}
         
-    print("  [4/4] 개별 이메일 발송을 시작합니다!")
+    print("  [4/4] 개별 이메일 발송을 시작합니다! (스팸 방지를 위해 랜덤 시간차 적용)")
+    
+    import random
+    
+    # 5시~7시(2시간 = 7200초) 안에 모두 보내도록 최대 평균 딜레이 계산
+    # 구독자가 적을 때는 25~50초 간격 유지, 몹시 많을 때는 그에 맞춰 간격 단축
+    max_avg_delay = min(7000 / max(len(subscribers), 1), 35) 
+    
     for idx, email in enumerate(subscribers):
         # 개별 사용자용 커스텀 취소 링크 삽입
         unsub_link = f"{WEB_APP_URL}?action=unsubscribe&email={email}"
         personal_html = base_html.replace('{UNSUBSCRIBE_LINK}', unsub_link)
         
         msg = EmailMessage()
-        msg['Subject'] = f"[알바단지] {today_str} 최신 지원 공고가 도착했습니다!"
-        msg['From'] = f"알바단지 <{AWS_SES_SENDER_EMAIL}>"
+        msg['Subject'] = f"[알바단지] {today_str} 좌담회 소식이 도착했습니다!"
+        msg['From'] = f"알바단지 <{SMTP_USER}>"
         msg['To'] = email
         msg.set_content("HTML 형식을 지원하는 메일 클라이언트에서 열어주세요.")
         msg.add_alternative(personal_html, subtype='html')
         
         try:
             if not dry_run:
-                response = ses_client.send_raw_email(
-                    Source=msg['From'],
-                    Destinations=[msg['To']],
-                    RawMessage={'Data': msg.as_string()}
-                )
+                server.send_message(msg)
             print(f"      - [{idx+1}/{len(subscribers)}] 전송 완료: {email}")
             success_count += 1
-            time.sleep(0.1) # AWS Limit 제한 넘지 않도록 약간의 딜레이
-        except ClientError as e:
-            print(f"      - [{idx+1}/{len(subscribers)}] 전송 실패 (AWS SES 에러): {email} ({e.response['Error']['Message']})")
-            fail_count += 1
+            
+            # 마지막 메일이 아니면 랜덤 대기
+            if idx < len(subscribers) - 1:
+                min_delay = max(5, int(max_avg_delay * 0.5))
+                max_delay = max(10, int(max_avg_delay * 1.5))
+                delay = random.randint(min_delay, max_delay)
+                print(f"        (사람처럼 보이기 위해 {delay}초 대기 중...)")
+                time.sleep(delay)
+                
         except Exception as e:
             print(f"      - [{idx+1}/{len(subscribers)}] 전송 실패: {email} ({e})")
             fail_count += 1
+            
+    if server:
+        server.quit()
         
     print("============================================================")
     print(f"[발송 완료] 성공: {success_count}건, 실패: {fail_count}건")
@@ -141,22 +147,19 @@ def send_newsletters(dry_run=False):
     return {"success": success_count, "fail": fail_count, "total": len(subscribers)}
 
 def send_admin_report(stats, postings_list):
-    """관리자에게 일일 업무 보고서를 발송합니다."""
     env = load_env()
-    AWS_ACCESS_KEY_ID = env.get('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = env.get('AWS_SECRET_ACCESS_KEY')
-    AWS_REGION = env.get('AWS_REGION', 'ap-northeast-2')
-    AWS_SES_SENDER_EMAIL = env.get('AWS_SES_SENDER_EMAIL')
+    SMTP_USER = env.get('SMTP_USER')
+    SMTP_APP_PASSWORD = env.get('SMTP_APP_PASSWORD')
     ADMIN_EMAIL = env.get('ADMIN_EMAIL')
     
-    if not all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SES_SENDER_EMAIL, ADMIN_EMAIL]):
-        print("  [보고서 오류] AWS 계정 또는 관리자 이메일 정보가 없어 보고서를 보낼 수 없습니다.")
+    if not all([SMTP_USER, SMTP_APP_PASSWORD, ADMIN_EMAIL]):
+        print("  [보고서 오류] 계정 정보(SMTP_USER) 또는 관리자 이메일 정보가 없어 보고서를 보낼 수 없습니다.")
         return
 
     today_str = datetime.now().strftime('%Y-%m-%d')
     msg = EmailMessage()
     msg['Subject'] = f"[보고] {today_str} 알바단지 뉴스레터 발행 결과"
-    msg['From'] = f"알바단지 시스템 <{AWS_SES_SENDER_EMAIL}>"
+    msg['From'] = f"알바단지 시스템 <{SMTP_USER}>"
     msg['To'] = ADMIN_EMAIL
     
     posting_count = 0
@@ -167,7 +170,7 @@ def send_admin_report(stats, postings_list):
         posting_count = len(postings_list)
         from collections import Counter
         counts = Counter(p.get('source', '기타') for p in postings_list)
-        source_summary = "\n   [출처별 수집 상세]\n"
+        source_summary = "\n   [출처별 상세]\n"
         for src, cnt in counts.most_common():
             source_summary += f"   - {src}: {cnt}건\n"
 
@@ -188,20 +191,11 @@ def send_admin_report(stats, postings_list):
     msg.set_content(content)
     
     try:
-        ses_client = boto3.client(
-            'ses',
-            region_name=AWS_REGION,
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY
-        )
-        ses_client.send_raw_email(
-            Source=msg['From'],
-            Destinations=[msg['To']],
-            RawMessage={'Data': msg.as_string()}
-        )
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_APP_PASSWORD)
+            server.send_message(msg)
         print(f"  [보고 완료] 관리자({ADMIN_EMAIL})에게 일일 보고서를 발송했습니다.")
-    except ClientError as e:
-        print(f"  [보고 실패] 관리자 메일 발송 중 에러 발생 (AWS): {e.response['Error']['Message']}")
     except Exception as e:
         print(f"  [보고 실패] 관리자 메일 발송 중 에러 발생: {e}")
 

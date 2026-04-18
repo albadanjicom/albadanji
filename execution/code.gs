@@ -152,14 +152,12 @@ function doGet(e) {
         }
       }
       var html = '<div style="max-width: 500px; margin: 40px auto; font-family: sans-serif; text-align: center;">' +
-                 '<h2 style="color: #334155;">구독이 성공적으로 취소되었습니다.</h2>' +
-                 '<p style="color: #64748B;">더 이상 알바단지 뉴스레터가 발송되지 않습니다. 그동안 함께해주셔서 감사합니다!</p>' +
+                 '<h2 style="color: #334155;">✅ 구독이 성공적으로 취소되었습니다.</h2>' +
+                 '<p style="color: #64748B;">더 이상 알바단지 뉴스레터가 발송되지 않습니다. 그동안 함께해주셔서 감사합니다! 👋</p>' +
                  '</div>';
-      return ContentService.createTextOutput(html)
-                           .setMimeType(ContentService.MimeType.HTML);
+      return HtmlService.createHtmlOutput(html);
     }
-    return ContentService.createTextOutput('잘못된 접근입니다.')
-                         .setMimeType(ContentService.MimeType.HTML);
+    return HtmlService.createHtmlOutput('잘못된 접근입니다.');
   }
   
   return ContentService.createTextOutput('정상 작동중');

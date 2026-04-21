@@ -330,6 +330,45 @@
       margin-top: var(--space-2xl);
     }
 
+    /* Load More Button */
+    .load-more-container {
+      text-align: center;
+      padding: var(--space-xl) 0;
+      margin-top: var(--space-md);
+    }
+
+    .load-more-btn {
+      padding: 12px 32px;
+      background: var(--bg-card);
+      border: 1.5px solid var(--accent-blue);
+      border-radius: var(--radius-full);
+      color: var(--accent-blue);
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .load-more-btn:hover {
+      background: var(--accent-blue);
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .load-more-btn:active {
+      transform: translateY(0);
+    }
+
+    .load-more-btn__count {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      font-weight: 500;
+    }
+
     /* Animations */
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(12px); }
@@ -457,6 +496,8 @@
     let allPostings = [];
     let currentQuery = '';
     let currentType = 'all';
+    let displayLimit = 50;
+    const PAGE_SIZE = 50;
 
     // ── HTML escape ──
     function escapeHtml(text) {
@@ -611,7 +652,9 @@
         return;
       }
 
-      const groups = groupByDate(postings);
+      const totalCount = postings.length;
+      const limitedPostings = postings.slice(0, displayLimit);
+      const groups = groupByDate(limitedPostings);
       let html = '';
       let idx = 0;
 
@@ -638,19 +681,40 @@
 
       container.innerHTML = html;
 
+      // Add "Load More" button if needed
+      if (totalCount > displayLimit) {
+        const remaining = totalCount - displayLimit;
+        const loadMoreDiv = document.createElement('div');
+        loadMoreDiv.className = 'load-more-container';
+        loadMoreDiv.innerHTML = `
+          <button class="load-more-btn" id="load-more-btn">
+            <span>더 보기</span>
+            <span class="load-more-btn__count">(${remaining}개 남음)</span>
+          </button>
+        `;
+        container.appendChild(loadMoreDiv);
+
+        document.getElementById('load-more-btn').addEventListener('click', () => {
+          displayLimit += PAGE_SIZE;
+          applyFilters(false); // false: reset scroll or limit logic if any, but here just re-run filter
+        });
+      }
+
       // Stats
       const totalAll = allPostings.length;
       if (statsText) {
         if (query || currentType !== 'all') {
-          statsText.innerHTML = `<strong>${postings.length}</strong>건 표시 / 전체 ${totalAll}건`;
+          statsText.innerHTML = `<strong>${totalCount}</strong>건 검색됨 (상위 ${limitedPostings.length}건 표시)`;
         } else {
-          statsText.innerHTML = `전체 <strong>${totalAll}</strong>건 — 시간 역순 정렬`;
+          statsText.innerHTML = `전체 <strong>${totalAll}</strong>건 — 상위 ${limitedPostings.length}건 표시`;
         }
       }
     }
 
     // ── Filter & search logic ──
-    function applyFilters() {
+    function applyFilters(resetLimit = true) {
+      if (resetLimit) displayLimit = PAGE_SIZE;
+      
       const query = currentQuery.toLowerCase().trim();
       const type = currentType;
 

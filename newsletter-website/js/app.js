@@ -3,55 +3,9 @@
    =================================================== */
 
 // Type → badge CSS class mapping
-const TYPE_CLASS_MAP = {
-  '좌담회': 'posting-card__type--fgd',
-  '설문조사': 'posting-card__type--online',
-  '온라인': 'posting-card__type--online',
-  '맛테스트': 'posting-card__type--taste',
-  '인터뷰': 'posting-card__type--interview',
-  '유치조사': 'posting-card__type--other',
-  '패널모집': 'posting-card__type--other',
-  '기타': 'posting-card__type--other',
-  '상시모집': 'posting-card__type--always',
-};
+// Constants and utility functions (escapeHtml, linkify, getEffectiveType) 
+// have been moved to js/utils.js for sharing across pages.
 
-// Type → icon mapping
-const TYPE_ICON_MAP = {
-  '좌담회': '&#128172;',
-  '온라인': '&#128187;',
-  '설문조사': '&#128187;',
-  '맛테스트': '&#127860;',
-  '인터뷰': '&#127908;',
-  '유치조사': '&#128230;',
-  '패널모집': '&#128101;',
-  '기타': '&#128196;',
-  '상시모집': '&#128260;',
-};
-
-let allPostings = [];
-
-// ── Determine effective type (상시모집 if no date or '상시' keyword) ──
-function getEffectiveType(p) {
-  const title = (p.title || '').toLowerCase();
-  const raw = (p.raw_content || '').toLowerCase();
-  
-  // 1. 제목이나 본문에 '상시'가 명시적으로 있으면 상시모집
-  if (title.includes('상시') || raw.includes('상시모집')) {
-    return '상시모집';
-  }
-  
-  // 2. 이미 유형이 명확히 추출되었다면(기타 제외) 해당 유형 유지
-  if (p.type && p.type !== '기타') {
-    return p.type;
-  }
-  
-  // 3. 날짜 정보가 아예 없는 경우에만 상시모집으로 취급
-  if (!p.date && !p.time) {
-    return '상시모집';
-  }
-  
-  return p.type || '기타';
-}
 
 // ── Render a single posting card ──
 function renderPostingCard(p, index) {
@@ -109,19 +63,7 @@ function renderPostingCard(p, index) {
 }
 
 // ── HTML helpers ──
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text || "";
-  return div.innerHTML;
-}
-
-function linkify(text) {
-  if (!text) return "";
-  const urlRegex = /(https?:\/\/[^\s<]+)/g;
-  return text.replace(urlRegex, (url) => {
-    return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">${url}</a>`;
-  });
-}
+// escapeHtml and linkify moved to utils.js
 
 // ── Render all postings ──
 let currentRenderedPostings = [];
@@ -260,7 +202,7 @@ function updateFilterCounts() {
 }
 
 // ── Subscribe form ──
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzyamQy2beFZ0_uDA6IEdAqQ5rG5AJ4o70wyiXNh9XegnNXv_4YeiNcT96ebamgl5SW/exec";
+// WEB_APP_URL moved to utils.js
 
 // Toast notification helper
 function showToast(message, type = 'success') {

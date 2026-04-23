@@ -70,9 +70,9 @@
     </div>
   </div>
 
+  <script src="js/utils.js"></script>
   <script>
     // [OPTIMIZATION] Start fetching live data immediately (before other scripts load)
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzyamQy2beFZ0_uDA6IEdAqQ5rG5AJ4o70wyiXNh9XegnNXv_4YeiNcT96ebamgl5SW/exec";
     const params = new URLSearchParams(window.location.search);
     const postingId = params.get('id');
     let liveFeaturedPromise = null;

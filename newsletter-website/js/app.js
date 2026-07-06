@@ -45,7 +45,7 @@ function renderPostingCard(p, index) {
   // Note: survey_content is now removed from card to open in Modal instead.
   
   const hasDetails = !!p.survey_content;
-  const hrefAttr = hasDetails ? `href="detail.html?id=${p.id}"` : `href="${p.source_url}"`;
+  const hrefAttr = hasDetails ? `href="recruit/${p.id}.html"` : `href="${p.source_url}"`;
   const onclickAttr = hasDetails ? `onclick="savePostingDetail('${p.id}')"` : '';
   const targetAttr = `target="_blank" rel="noopener noreferrer"`;
 
